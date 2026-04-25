@@ -68,3 +68,53 @@ sudo ufw default deny incoming
 This setup allows all outgoing traffic and blocks all incoming traffic unless we explicitly allow it (for example, SSH on port 2222).
 
 ### Step4: User Management 
+
+We need to create two users on the server with different authentication methods and privileges.
+
+1. User: luffy
+
+Authentication method: SSH key-based authentication
+
+Home directory: /home/luffy
+
+Sudo privileges: yes
+
+This user will connect using an SSH public key. After generating the key, you must add the public key to the server (in ~/.ssh/authorized_keys). The private key stays on your local machine. Make sure your SSH key is ready for the audit session.
+
+2. User: zoro
+
+Authentication method: Password authentication
+
+Home directory: /home/zoro
+
+Sudo privileges: no
+
+This user will log in using a password. Set a strong custom password and keep it for the audit session.
+
+SSH Configuration per User
+
+To enforce these rules, we must configure SSH in:
+```
+/etc/ssh/sshd_config
+```
+
+In this file, we can define access and authentication methods for each user. For example:
+```
+Match User luffy
+        PasswordAuthentication no
+        PubkeyAuthentication yes
+Match User zoro
+        PasswordAuthentication yes
+        PubkeyAuthentication no
+```
+
+This configuration ensures that:
+
+luffy can only authenticate using an SSH key
+zoro can authenticate using a password
+
+After making changes, restart the SSH service:
+
+```
+sudo systemctl restart ssh
+```
