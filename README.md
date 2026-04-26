@@ -118,3 +118,82 @@ After making changes, restart the SSH service:
 ```
 sudo systemctl restart ssh
 ```
+## # Step5: Services Configuration
+
+### FTP Server (vsftpd)
+
+The user `nami` is restricted to the `/backup` directory with read-only access. Anonymous access is disabled for security.
+
+- **Config file:** `/etc/vsftpd.conf`
+- **Key setting:** `local_root=/backup`, `write_enable=NO`
+
+### MySQL Database
+
+MySQL was secured to prevent remote access.
+
+- **Security:** `sudo mysql_secure_installation`
+- **Access:** Only allows connections from `localhost`.
+- **Database:** Created `wordpress_db` and a dedicated user with limited permissions.
+
+### WordPress
+
+Installed in the web root `/srv/www/wordpress/`.
+
+- **Security:** `wp-config.php` permissions were set to `600` so it is not publicly accessible.
+
+---
+
+## 🔄 6. Automated Backups
+
+A cron job was established to automate database backups every day at midnight.
+
+**The Backup Script (`/usr/local/bin/backup.sh`):**
+
+```bash
+#!/bin/bash
+DATE=$(date +%Y-%m-%d_%H-%M)
+FILENAME="/backup/wp_db_$DATE.sql.tar.gz"
+
+# Dump and compress database
+mysqldump -u wp_user -p'password' wordpress_db | gzip > $FILENAME
+
+# Log entry
+echo "Backup successful: $DATE" >> /var/log/backup.log
+```
+
+**Setting the Cron Job:**
+
+```bash
+sudo crontab -e
+# Add this line:
+0 0 * * * /usr/local/bin/backup.sh
+```
+
+---
+
+## 🛠 Commands Summary
+
+- `systemctl restart <service>`: Restarts a service (ssh, mysql, vsftpd).
+- `ufw status numbered`: Shows active firewall rules.
+- `lsblk`: Displays disk partitions.
+- `tail -f /var/log/backup.log`: Checks the backup logs in real-time.
+- `chmod 600 <file>`: Restricts file read/write to the owner only.
+
+
+### 📝 Submission Info
+
+To verify the integrity of the VM image, use the provided SHA1 sum:
+
+```bash
+sha1sum deep-in-system.ova > deep-in-system.sha1
+```
+
+### 📦 Virtual Machine Download
+
+Since the configured Ubuntu Server is stored as a Virtual Machine (`.ova` format), you can download the exact environment used in this project from the link below. This file includes all the partitioning, user configurations, and services described in this documentation.
+
+*   **Download Link:** [Click here to download deep-in-system.ova](https://drive.google.com/file/d/1s6IUT824dyCZBFYvOi-tK1fNWTqhwBzX/view?usp=sharing)
+*   **File Format:** OVA (Open Virtualization Archive)
+
+---
+*Created by [Ismail Sayen] as part of the Deep-in-System Project.*
